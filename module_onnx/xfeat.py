@@ -61,11 +61,12 @@ class XFeat(nn.Module):
         scores[torch.all(mkpts == 0, dim=-1)] = -1
 
         # Select top-k features
-        idxs = torch.argsort(-scores)
-        mkpts_x = torch.gather(mkpts[..., 0], -1, idxs)[:, :self.top_k]
-        mkpts_y = torch.gather(mkpts[..., 1], -1, idxs)[:, :self.top_k]
+        # idxs = torch.argsort(-scores)
+        scores, idxs = torch.topk(scores, k=self.top_k)
+        mkpts_x = torch.gather(mkpts[..., 0], -1, idxs)
+        mkpts_y = torch.gather(mkpts[..., 1], -1, idxs)
         mkpts = torch.cat([mkpts_x[..., None], mkpts_y[..., None]], dim=-1)
-        scores = torch.gather(scores, -1, idxs)[:, :self.top_k]
+        # scores = torch.gather(scores, -1, idxs)
 
         # Interpolate descriptors at kpts positions
         feats = self.interpolator(M1, mkpts, H=_H1, W=_W1)
@@ -75,10 +76,11 @@ class XFeat(nn.Module):
 
         # Correct kpt scale
         mkpts = mkpts * torch.tensor([rw1, rh1], device=mkpts.device).view(1, 1, -1)
-        valid = scores > 0
-        return {'keypoints': mkpts[valid],
-                'descriptors': feats[valid],
-                'scores': scores[valid]}
+        # valid = scores > 0
+
+        return {'keypoints': mkpts[0],
+                'descriptors': feats[0],
+                'scores': scores[0]}
 
     @torch.inference_mode()
     def detectAndComputeDense(self, x):
@@ -192,21 +194,18 @@ class XFeat(nn.Module):
         idx0 = torch.arange(match12.shape[0], device=match12.device)
         mutual = match21[match12] == idx0
 
-        if min_cossim > 0:
-            cossim, _ = cossim.max(dim=1)
-            good = cossim > min_cossim
-            idx0 = idx0[mutual & good]
-            idx1 = match12[mutual & good]
-        else:
-            idx0 = idx0[mutual]
-            idx1 = match12[mutual]
+        cossim, _ = cossim.max(dim=1)
+        good = cossim > min_cossim
+        idx0 = idx0[mutual & good]
+        idx1 = match12[mutual & good]
 
         return idx0, idx1
 
     @torch.inference_mode()
-    def match_onnx(self, mkpts0, feats0, mkpts1, feats1):
-        idx0, idx1 = self.match(feats0, feats1, min_cossim=-1)
-        return mkpts0[idx0], mkpts1[idx1]
+    def match_onnx(self, feats0, feats1, min_cossim):
+        idx0, idx1 = self.match(feats0, feats1, min_cossim=min_cossim)
+        matches = torch.stack([idx0, idx1], dim=1)
+        return matches
 
     @torch.inference_mode()
     def match_star_onnx(self, mkpts0, feats0, mkpts1, feats1, sc0):

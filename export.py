@@ -78,7 +78,7 @@ def export_onnx(
         # Export Extractor and Matching
         # ------------------------------
         output_path = xfeat_path.replace(".pt", "_e2e.onnx")
-        xfeat.forward = xfeat.match_xfeat
+        xfeat.forward = xfeat.match
 
         if dense:
             xfeat.forward = xfeat.match_xfeat_star
@@ -148,11 +148,12 @@ def export_onnx(
             image0,
             output_path,
             verbose=False,
-            do_constant_folding=True,
             input_names=["images"],
             output_names=output_names,
             opset_version=17,
             dynamic_axes=dynamic_axes,
+            dynamo=True,
+            report=True,
         )
 
         # -----------------
@@ -162,18 +163,19 @@ def export_onnx(
         # Simulate keypoints, features
         kpts = torch.rand(top_k, 2, dtype=torch.float32)
         descr = torch.rand(top_k, 64, dtype=torch.float32)
+        min_cossim = torch.tensor([0.5], dtype=torch.float32)
         scales = torch.rand(top_k, dtype=torch.float32)
 
         # Dynamic input
         dynamic_axes = {
-            "kpts0": {0: "num_kpts0"},
+            # "kpts0": {0: "num_kpts0"},
             "feats0": {0: "num_kpts0"},
-            "kpts1": {0: "num_kpts1"},
+            # "kpts1": {0: "num_kpts1"},
             "feats1": {0: "num_kpts1"},
         }
 
-        input_names = ["kpts0", "feats0", "kpts1", "feats1"]
-        input_values = [kpts, descr, kpts, descr]
+        input_names = ["feats0", "feats1", "min_cossim"]
+        input_values = [descr, descr, min_cossim]
         if dense:
             output_matching_path = os.path.join(os.path.dirname(output_path), "matching_dense.onnx")
             xfeat.forward = xfeat.match_star_onnx
@@ -191,7 +193,7 @@ def export_onnx(
             verbose=False,
             do_constant_folding=False,
             input_names=input_names,
-            output_names=["mkpts0", "mkpts1"],
+            output_names=["matches"],
             opset_version=17,
             dynamic_axes=dynamic_axes,
         )

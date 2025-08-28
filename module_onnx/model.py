@@ -132,9 +132,9 @@ class XFeatModel(nn.Module):
 
         """
         #dont backprop through normalization
-        with torch.no_grad():
-            x = x.mean(dim=1, keepdim=True)
-            x = self.norm(x)
+        # with torch.no_grad():
+        x = x.mean(dim=1, keepdim=True)
+        x = self.norm(x)
 
         # main backbone
         x1 = self.block1(x)

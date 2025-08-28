@@ -7,11 +7,11 @@ from utils import draw_points, load_image
 
 def main():
     # Setting variables
-    dense = True                    # Dense keypoints extraction
+    dense = False                    # Dense keypoints extraction
     multiscale = False              # Dense mode: enable multiscale
 
     # Get image and load
-    fname_img = "assets/ref.png"
+    fname_img = "/Users/jsch/data/south-building/images_subset/P1180141.JPG"
     img = cv2.imread(fname_img)     # For debug purpose
 
     # Create model
