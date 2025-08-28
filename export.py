@@ -150,7 +150,7 @@ def export_onnx(
             verbose=False,
             input_names=["images"],
             output_names=output_names,
-            opset_version=17,
+            opset_version=18,
             dynamic_axes=dynamic_axes,
             dynamo=True,
             report=True,
