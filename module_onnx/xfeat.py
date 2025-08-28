@@ -62,10 +62,10 @@ class XFeat(nn.Module):
 
         # Select top-k features
         # idxs = torch.argsort(-scores)
-        scores, idxs = torch.topk(scores, k=self.top_k)
-        mkpts_x = torch.gather(mkpts[..., 0], -1, idxs)
-        mkpts_y = torch.gather(mkpts[..., 1], -1, idxs)
-        mkpts = torch.cat([mkpts_x[..., None], mkpts_y[..., None]], dim=-1)
+        # scores, idxs = torch.topk(scores, k=self.top_k)
+        # mkpts_x = torch.gather(mkpts[..., 0], -1, idxs)
+        # mkpts_y = torch.gather(mkpts[..., 1], -1, idxs)
+        # mkpts = torch.cat([mkpts_x[..., None], mkpts_y[..., None]], dim=-1)
         # scores = torch.gather(scores, -1, idxs)
 
         # Interpolate descriptors at kpts positions

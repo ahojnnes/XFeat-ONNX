@@ -152,8 +152,7 @@ def export_onnx(
             output_names=output_names,
             opset_version=18,
             dynamic_axes=dynamic_axes,
-            dynamo=True,
-            report=True,
+            dynamo=False,
         )
 
         # -----------------
@@ -194,8 +193,9 @@ def export_onnx(
             do_constant_folding=False,
             input_names=input_names,
             output_names=["matches"],
-            opset_version=17,
+            opset_version=18,
             dynamic_axes=dynamic_axes,
+            dynamo=False,
         )
 
 
