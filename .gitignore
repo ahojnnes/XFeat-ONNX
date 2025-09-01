@@ -8,6 +8,8 @@ __pycache__/
 
 # ONNX model
 *.onnx
+weights/*.data
+weights/*.unified
 
 # Distribution / packaging
 .Python

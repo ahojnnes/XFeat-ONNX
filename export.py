@@ -2,6 +2,7 @@ import argparse
 import os.path
 from typing import List
 import torch
+import onnx
 
 from module_onnx.xfeat import XFeat
 # from lightglue_onnx.end2end import normalize_keypoints
@@ -152,15 +153,21 @@ def export_onnx(
             output_names=output_names,
             opset_version=18,
             dynamic_axes=dynamic_axes,
-            dynamo=False,
+            # For torch 2.8, dynamo=False results in invalid output.
+            dynamo=True,
         )
+        
+        # With dynamo=True, the model is exported into two failes (.onnx and .data) by default.
+        # However, since the model is small, we prefer a single file for convenience.
+        onnx_extractor = onnx.load(output_path)
+        onnx.save_model(onnx_extractor, output_path + ".unified")
 
         # -----------------
         # Export Matching
         # -----------------
 
         # Simulate keypoints, features
-        kpts = torch.rand(top_k, 2, dtype=torch.float32)
+        # kpts = torch.rand(top_k, 2, dtype=torch.float32)
         descr = torch.rand(top_k, 64, dtype=torch.float32)
         min_cossim = torch.tensor([0.5], dtype=torch.float32)
         scales = torch.rand(top_k, dtype=torch.float32)
@@ -195,8 +202,14 @@ def export_onnx(
             output_names=["matches"],
             opset_version=18,
             dynamic_axes=dynamic_axes,
-            dynamo=False,
+            # For torch 2.8, dynamo=False results in invalid output.
+            dynamo=True,
         )
+
+        # With dynamo=True, the model is exported into two failes (.onnx and .data) by default.
+        # However, since the model is small, we prefer a single file for convenience.
+        onnx_matcher = onnx.load(output_matching_path)
+        onnx.save_model(onnx_matcher, output_matching_path + ".unified")
 
 
 if __name__ == "__main__":
