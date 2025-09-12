@@ -143,6 +143,10 @@ def export_onnx(
                 ".onnx", f"_{image0.shape[-2]}x{image0.shape[-1]}.onnx"
             )
 
+        dynamic_shapes = {
+            "x": {2: torch.export.Dim.DYNAMIC, 3: torch.export.Dim.DYNAMIC},
+        }
+
         # Export model
         torch.onnx.export(
             xfeat,
@@ -152,7 +156,8 @@ def export_onnx(
             input_names=["images"],
             output_names=output_names,
             opset_version=18,
-            dynamic_axes=dynamic_axes,
+            # dynamic_axes=dynamic_axes,
+            dynamic_shapes=dynamic_shapes,
             # For torch 2.8, dynamo=False results in invalid output.
             dynamo=True,
         )
@@ -191,6 +196,12 @@ def export_onnx(
         else:
             output_matching_path = os.path.join(os.path.dirname(output_path), "matching.onnx")
             xfeat.forward = xfeat.match_onnx
+        
+        dynamic_shapes = {
+            "feats0": {0: torch.export.Dim.DYNAMIC},
+            "feats1": {0: torch.export.Dim.DYNAMIC},
+            "min_cossim": {},
+        }
 
         torch.onnx.export(
             xfeat,
@@ -201,7 +212,8 @@ def export_onnx(
             input_names=input_names,
             output_names=["matches"],
             opset_version=18,
-            dynamic_axes=dynamic_axes,
+            # dynamic_axes=dynamic_axes,
+            dynamic_shapes=dynamic_shapes,
             # For torch 2.8, dynamo=False results in invalid output.
             dynamo=True,
         )
